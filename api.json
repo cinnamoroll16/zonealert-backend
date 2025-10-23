@@ -1,0 +1,613 @@
+{
+  "info": {
+    "name": "ZoneAlert Livestock Monitoring API",
+    "description": "Complete API collection for testing ZoneAlert backend endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "farmerId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "farmId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "zoneId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sensorId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "livestockId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "iotApiKey",
+      "value": "your-iot-devices-api-key",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Server Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": ["{{baseUrl}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register Farmer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', jsonData.data.token);",
+                  "    pm.collectionVariables.set('farmerId', jsonData.data.farmer.farmer_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"juan@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"Juan Dela Cruz\",\n  \"location\": \"Cebu City, Philippines\",\n  \"phone\": \"+639123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', jsonData.data.token);",
+                  "    pm.collectionVariables.set('farmerId', jsonData.data.farmer.farmer_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"juan@example.com\",\n  \"password\": \"password123\",\n  \"fcm_token\": \"optional_fcm_token_here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{authToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{authToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "verify-token"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"farmer_id\": \"{{farmerId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sensors (IoT)",
+      "item": [
+        {
+          "name": "Submit Sensor Reading (IoT Device)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sensor_id\": \"sensor_001\",\n  \"distance_measured\": 45.5,\n  \"sensor_type\": \"LIDAR\",\n  \"api_key\": \"{{iotApiKey}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/sensors/reading",
+              "host": ["{{baseUrl}}"],
+              "path": ["sensors", "reading"]
+            },
+            "description": "IoT devices use this endpoint to submit sensor readings to RTDB"
+          }
+        },
+        {
+          "name": "Submit Batch Readings (IoT Device)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"api_key\": \"{{iotApiKey}}\",\n  \"readings\": [\n    {\n      \"sensor_id\": \"sensor_001\",\n      \"distance_measured\": 45.5,\n      \"sensor_type\": \"LIDAR\",\n      \"timestamp\": 1706010600000\n    },\n    {\n      \"sensor_id\": \"sensor_002\",\n      \"distance_measured\": 32.1,\n      \"sensor_type\": \"ULTRASONIC\",\n      \"timestamp\": 1706010610000\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/sensors/batch",
+              "host": ["{{baseUrl}}"],
+              "path": ["sensors", "batch"]
+            }
+          }
+        },
+        {
+          "name": "Register New Sensor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('sensorId', jsonData.data.sensor_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_id\": \"ESP32-001\",\n  \"sensor_type\": \"LIDAR\",\n  \"zone_id\": \"{{zoneId}}\",\n  \"farm_id\": \"{{farmId}}\",\n  \"location_description\": \"North Fence Post 3\",\n  \"coordinates\": {\n    \"latitude\": 10.3459,\n    \"longitude\": 123.9125\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/sensors/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["sensors", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get Sensor Readings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sensors/readings/{{sensorId}}?limit=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["sensors", "readings", "{{sensorId}}"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2025-01-20",
+                  "disabled": true
+                },
+                {
+                  "key": "end_date",
+                  "value": "2025-01-23",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Live Sensor Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sensors/live/{{sensorId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["sensors", "live", "{{sensorId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get All Sensors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sensors?farm_id={{farmId}}&status=all",
+              "host": ["{{baseUrl}}"],
+              "path": ["sensors"],
+              "query": [
+                {
+                  "key": "farm_id",
+                  "value": "{{farmId}}"
+                },
+                {
+                  "key": "zone_id",
+                  "value": "{{zoneId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "all",
+                  "description": "online, offline, or all"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Battery Level (IoT)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"battery_level\": 75.5,\n  \"api_key\": \"{{iotApiKey}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/sensors/{{sensorId}}/battery",
+              "host": ["{{baseUrl}}"],
+              "path": ["sensors", "{{sensorId}}", "battery"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Livestock",
+      "item": [
+        {
+          "name": "Add Livestock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('livestockId', jsonData.data.livestock_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"zone_id\": \"{{zoneId}}\",\n  \"farm_id\": \"{{farmId}}\",\n  \"animal_type\": \"Goat\",\n  \"identification_tag\": \"GOAT-001\",\n  \"age_months\": 24,\n  \"weight_kg\": 45.5,\n  \"health_status\": \"healthy\",\n  \"breed\": \"Boer\",\n  \"gender\": \"Male\",\n  \"notes\": \"Active and healthy goat\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/livestock",
+              "host": ["{{baseUrl}}"],
+              "path": ["livestock"]
+            }
+          }
+        },
+        {
+          "name": "Get All Livestock",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/livestock?farm_id={{farmId}}&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["livestock"],
+              "query": [
+                {
+                  "key": "farm_id",
+                  "value": "{{farmId}}"
+                },
+                {
+                  "key": "zone_id",
+                  "value": "{{zoneId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "animal_type",
+                  "value": "Goat",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "inside_boundary",
+                  "disabled": true
+                },
+                {
+                  "key": "health_status",
+                  "value": "healthy",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Livestock Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/livestock/{{livestockId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["livestock", "{{livestockId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Livestock",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"health_status\": \"sick\",\n  \"weight_kg\": 43.2,\n  \"notes\": \"Showing signs of illness, under observation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/livestock/{{livestockId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["livestock", "{{livestockId}}"]
+            }
+          }
+        },
+        {
+          "name": "Add Vaccination Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vaccine_name\": \"FMD Vaccine\",\n  \"vaccination_date\": \"2025-01-23\",\n  \"next_due_date\": \"2025-07-23\",\n  \"veterinarian\": \"Dr. Santos\",\n  \"notes\": \"Annual vaccination completed\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/livestock/{{livestockId}}/vaccination",
+              "host": ["{{baseUrl}}"],
+              "path": ["livestock", "{{livestockId}}", "vaccination"]
+            }
+          }
+        },
+        {
+          "name": "Add Medical Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"condition\": \"Respiratory infection\",\n  \"treatment\": \"Antibiotic treatment\",\n  \"date\": \"2025-01-23\",\n  \"veterinarian\": \"Dr. Santos\",\n  \"medication\": \"Amoxicillin 500mg\",\n  \"follow_up_date\": \"2025-01-30\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/livestock/{{livestockId}}/medical",
+              "host": ["{{baseUrl}}"],
+              "path": ["livestock", "{{livestockId}}", "medical"]
+            }
+          }
+        },
+        {
+          "name": "Get Livestock Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/livestock/stats/{{farmId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["livestock", "stats", "{{farmId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Livestock",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/livestock/{{livestockId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["livestock", "{{livestockId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
