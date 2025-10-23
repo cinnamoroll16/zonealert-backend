@@ -1,1 +1,3 @@
 node_modules
+# Firebase credentials
+config/serviceAccountKey.json
