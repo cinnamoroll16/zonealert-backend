@@ -1,12 +1,7 @@
 // middleware/errorHandler.js
-
-/**
- * Global Error Handler Middleware
- */
 const errorHandler = (err, req, res, next) => {
     console.error('Error:', err);
 
-    // Firebase errors
     if (err.code?.startsWith('auth/')) {
         return res.status(401).json({
             success: false,
@@ -15,7 +10,6 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
-    // Firestore errors
     if (err.code === 'permission-denied') {
         return res.status(403).json({
             success: false,
@@ -32,7 +26,6 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
-    // Validation errors
     if (err.name === 'ValidationError') {
         return res.status(400).json({
             success: false,
@@ -44,7 +37,6 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
-    // MongoDB/Mongoose errors (if applicable)
     if (err.code === 11000) {
         return res.status(409).json({
             success: false,
@@ -53,7 +45,6 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
-    // JWT errors
     if (err.name === 'JsonWebTokenError') {
         return res.status(401).json({
             success: false,
@@ -70,7 +61,6 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
-    // Rate limiting errors
     if (err.status === 429) {
         return res.status(429).json({
             success: false,
@@ -79,7 +69,6 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
-    // Default error
     const statusCode = err.statusCode || err.status || 500;
     const message = err.message || 'Internal server error';
 
@@ -90,17 +79,10 @@ const errorHandler = (err, req, res, next) => {
     });
 };
 
-/**
- * Async Handler Wrapper
- * Wraps async route handlers to catch errors
- */
 const asyncHandler = (fn) => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-/**
- * Not Found Handler
- */
 const notFound = (req, res, next) => {
     const error = new Error(`Not Found - ${req.originalUrl}`);
     error.status = 404;

@@ -2,147 +2,129 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
-const { firestore, realtimeDb } = require('./config/firebase.config');
 
-// Import route handlers
-const authRoutes = require('./routes/auth.routes');
-// const farmerRoutes = require('./routes/farmer.routes');
-// const farmRoutes = require('./routes/farm.routes');
-// const livestockRoutes = require('./routes/livestock.routes');
-// const zoneRoutes = require('./routes/zone.routes');
-// const sensorRoutes = require('./routes/sensor.routes');
-// const alertRoutes = require('./routes/alert.routes');
-// const notificationRoutes = require('./routes/notification.routes');
-// const analyticsRoutes = require('./routes/analytics.routes');
-
-// Import middleware
-const { errorHandler } = require('./middleware/errorHandler');
-const { verifyToken } = require('./middleware/auth.middleware');
-
-// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
-app.use(helmet());
-app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:8080', '*'], // Add your Android emulator IP
-    credentials: true
-}));
+// ✅ Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.'
+// ✅ Request logging middleware (for debugging)
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
 });
 
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 5, // Limit auth attempts
-    skipSuccessfulRequests: true
+// ✅ Initialize Firebase (must be before routes if routes depend on Firebase)
+require('./config/firebase.config');
+
+// ✅ Import Routes (check that all files exist)
+const authRoutes = require('./routes/auth.routes');
+const farmerRoutes = require('./routes/farmer.routes');
+const farmRoutes = require('./routes/farm.routes');
+
+// ⚠️ These should be wrapped in try-catch or conditionally required to prevent startup crashes
+let livestockRoutes, zoneRoutes, alertRoutes, notificationRoutes, analyticsRoutes, sensorRoutes;
+try {
+  livestockRoutes = require('./routes/livestock.routes');
+  zoneRoutes = require('./routes/zone.routes');
+  alertRoutes = require('./routes/alert.routes');
+  notificationRoutes = require('./routes/notification.routes');
+  analyticsRoutes = require('./routes/analytics.routes');
+  sensorRoutes = require('./routes/sensor.routes');
+  console.log('✅ Optional routes loaded successfully.');
+} catch (err) {
+  console.warn('⚠️ Some optional routes are missing:', err.message);
+}
+
+// ✅ Health Check Endpoint
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'ZoneAlert API is running',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      auth: '/api/auth',
+      farmers: '/api/farmers',
+      farms: '/api/farms',
+      livestock: '/api/livestock',
+      zones: '/api/zones',
+      alerts: '/api/alerts',
+      notifications: '/api/notifications',
+      analytics: '/api/analytics',
+      sensors: '/api/sensors'
+    }
+  });
 });
 
-// Apply rate limiting
-app.use('/api/', limiter);
-app.use('/api/auth/', authLimiter);
+// ✅ API Routes
+console.log('📝 Registering routes...');
 
-// Body parsing middleware
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
-app.use(compression());
-
-// Logging middleware
-app.use(morgan('combined'));
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.status(200).json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development'
-    });
-});
-
-// API Information endpoint
-app.get('/api', (req, res) => {
-    res.status(200).json({
-        name: 'ZoneAlert Livestock Monitoring API',
-        version: '1.0.0',
-        description: 'Backend API for IoT-based livestock monitoring system',
-        documentation: '/api/docs',
-        endpoints: {
-            auth: '/api/auth',
-            farmers: '/api/farmers',
-            farms: '/api/farms',
-            livestock: '/api/livestock',
-            zones: '/api/zones',
-            sensors: '/api/sensors',
-            alerts: '/api/alerts',
-            notifications: '/api/notifications',
-            analytics: '/api/analytics'
-        }
-    });
-});
-
-// Public routes (no authentication required)
 app.use('/api/auth', authRoutes);
+console.log('✅ Auth routes registered at /api/auth');
 
-// Protected routes (authentication required)
-// app.use('/api/farmers', verifyToken, farmerRoutes);
-// app.use('/api/farms', verifyToken, farmRoutes);
-// app.use('/api/livestock', verifyToken, livestockRoutes);
-// app.use('/api/zones', verifyToken, zoneRoutes);
-// app.use('/api/sensors', sensorRoutes); // Sensors can post without auth (IoT devices)
-// app.use('/api/alerts', verifyToken, alertRoutes);
-// app.use('/api/notifications', verifyToken, notificationRoutes);
-// app.use('/api/analytics', verifyToken, analyticsRoutes);
+app.use('/api/farmers', farmerRoutes);
+console.log('✅ Farmer routes registered at /api/farmers');
 
-// Error handling middleware (must be last)
-app.use(errorHandler);
+app.use('/api/farms', farmRoutes);
+console.log('✅ Farm routes registered at /api/farms');
 
-// 404 handler
+// ✅ Register optional routes if available
+if (livestockRoutes) app.use('/api/livestock', livestockRoutes);
+if (zoneRoutes) app.use('/api/zones', zoneRoutes);
+if (alertRoutes) app.use('/api/alerts', alertRoutes);
+if (notificationRoutes) app.use('/api/notifications', notificationRoutes);
+if (analyticsRoutes) app.use('/api/analytics', analyticsRoutes);
+if (sensorRoutes) app.use('/api/sensors', sensorRoutes);
+
+// ✅ 404 Handler (must be after all routes)
 app.use((req, res) => {
-    res.status(404).json({
-        error: 'Endpoint not found',
-        message: `Cannot ${req.method} ${req.originalUrl}`,
-        timestamp: new Date().toISOString()
-    });
+  res.status(404).json({
+    success: false,
+    message: 'Endpoint not found',
+    requestedUrl: req.originalUrl,
+    availableEndpoints: [
+      '/api/auth/*',
+      '/api/farmers/*',
+      '/api/farms/*'
+    ]
+  });
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`
-    🚀 ZoneAlert Backend Server Started
-    ====================================
-    Environment: ${process.env.NODE_ENV || 'development'}
-    Port: ${PORT}
-    Time: ${new Date().toISOString()}
-    
-    API Endpoints:
-    - Health Check: http://localhost:${PORT}/health
-    - API Info: http://localhost:${PORT}/api
-    
-    Ready to monitor livestock! 🐐🐄
-    ====================================
-    `);
+// ✅ Error Handler (must be last)
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { 
+      stack: err.stack,
+      error: err 
+    })
+  });
 });
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-    process.exit(1);
+// ✅ Start Server
+const server = app.listen(PORT, () => {
+  console.log('='.repeat(50));
+  console.log('🚀 ZoneAlert API Server Started');
+  console.log('='.repeat(50));
+  console.log(`📍 Server: http://localhost:${PORT}`);
+  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📅 Started at: ${new Date().toLocaleString()}`);
+  console.log('='.repeat(50));
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    process.exit(1);
+// ✅ Graceful Shutdown Fix
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+  });
 });
 
+// ✅ For Testing Purposes
 module.exports = app;

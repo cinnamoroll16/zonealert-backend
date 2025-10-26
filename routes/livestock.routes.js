@@ -42,7 +42,7 @@ router.post('/', [
 
         // Check if tag already exists
         const existingTag = await firestore
-            .collection('livestock')
+            .collection('Livestock')
             .where('identification_tag', '==', identification_tag)
             .where('farm_id', '==', farm_id)
             .limit(1)
@@ -57,7 +57,7 @@ router.post('/', [
 
         // Get zone details for denormalization
         const zoneDoc = await firestore
-            .collection('boundary_zones')
+            .collection('Boundary_Zones')
             .doc(zone_id)
             .get();
 
@@ -99,12 +99,12 @@ router.post('/', [
         };
 
         const livestockRef = await firestore
-            .collection('livestock')
+            .collection('Livestock')
             .add(livestockData);
 
         // Update zone livestock count
         await firestore
-            .collection('boundary_zones')
+            .collection('Boundary_Zones')
             .doc(zone_id)
             .update({
                 current_livestock_count: FieldValue.increment(1)
@@ -112,7 +112,7 @@ router.post('/', [
 
         // Update farm livestock count
         await firestore
-            .collection('farms')
+            .collection('Farms')
             .doc(farm_id)
             .update({
                 livestock_count: FieldValue.increment(1)
@@ -162,7 +162,7 @@ router.get('/', [
             offset = 0
         } = req.query;
 
-        let query = firestore.collection('livestock');
+        let query = firestore.collection('Livestock');
 
         // Apply filters
         if (farm_id) {
@@ -200,7 +200,7 @@ router.get('/', [
 
         // Get total count for pagination
         const countSnapshot = await firestore
-            .collection('livestock')
+            .collection('Livestock')
             .where('farm_id', '==', farm_id || '')
             .get();
 
@@ -235,7 +235,7 @@ router.get('/:livestockId', async (req, res) => {
         const { livestockId } = req.params;
 
         const livestockDoc = await firestore
-            .collection('livestock')
+            .collection('Livestock')
             .doc(livestockId)
             .get();
 
@@ -250,7 +250,7 @@ router.get('/:livestockId', async (req, res) => {
 
         // Get recent movement history from alerts
         const recentAlerts = await firestore
-            .collection('alerts')
+            .collection('Alerts')
             .where('livestock_id', '==', livestockId)
             .orderBy('detected_at', 'desc')
             .limit(10)
@@ -310,7 +310,7 @@ router.put('/:livestockId', [
         // If zone is being changed, update counts
         if (updateData.zone_id) {
             const livestockDoc = await firestore
-                .collection('livestock')
+                .collection('Livestock')
                 .doc(livestockId)
                 .get();
 
@@ -319,7 +319,7 @@ router.put('/:livestockId', [
 
                 // Decrease old zone count
                 await firestore
-                    .collection('boundary_zones')
+                    .collection('Boundary_Zones')
                     .doc(oldZoneId)
                     .update({
                         current_livestock_count: FieldValue.increment(-1)
@@ -327,7 +327,7 @@ router.put('/:livestockId', [
 
                 // Increase new zone count
                 await firestore
-                    .collection('boundary_zones')
+                    .collection('Boundary_Zones')
                     .doc(updateData.zone_id)
                     .update({
                         current_livestock_count: FieldValue.increment(1)
@@ -335,7 +335,7 @@ router.put('/:livestockId', [
 
                 // Get new zone name for denormalization
                 const newZoneDoc = await firestore
-                    .collection('boundary_zones')
+                    .collection('Boundary_Zones')
                     .doc(updateData.zone_id)
                     .get();
 
@@ -346,7 +346,7 @@ router.put('/:livestockId', [
         }
 
         await firestore
-            .collection('livestock')
+            .collection('Livestock')
             .doc(livestockId)
             .update(updateData);
 
@@ -380,7 +380,7 @@ router.delete('/:livestockId', async (req, res) => {
 
         // Get livestock data first
         const livestockDoc = await firestore
-            .collection('livestock')
+            .collection('Livestock')
             .doc(livestockId)
             .get();
 
@@ -395,13 +395,13 @@ router.delete('/:livestockId', async (req, res) => {
 
         // Delete the livestock
         await firestore
-            .collection('livestock')
+            .collection('Livestock')
             .doc(livestockId)
             .delete();
 
         // Update zone count
         await firestore
-            .collection('boundary_zones')
+            .collection('Boundary_Zones')
             .doc(livestockData.zone_id)
             .update({
                 current_livestock_count: FieldValue.increment(-1)
@@ -409,7 +409,7 @@ router.delete('/:livestockId', async (req, res) => {
 
         // Update farm count
         await firestore
-            .collection('farms')
+            .collection('Farms')
             .doc(livestockData.farm_id)
             .update({
                 livestock_count: FieldValue.increment(-1)
@@ -466,7 +466,7 @@ router.post('/:livestockId/vaccination', [
         };
 
         await firestore
-            .collection('livestock')
+            .collection('Livestock')
             .doc(livestockId)
             .update({
                 vaccination_records: FieldValue.arrayUnion(vaccinationRecord),
@@ -524,7 +524,7 @@ router.post('/:livestockId/medical', [
         };
 
         await firestore
-            .collection('livestock')
+            .collection('Livestock')
             .doc(livestockId)
             .update({
                 medical_history: FieldValue.arrayUnion(medicalRecord),
@@ -559,7 +559,7 @@ router.get('/stats/:farmId', async (req, res) => {
 
         // Get all livestock for the farm
         const livestockSnapshot = await firestore
-            .collection('livestock')
+            .collection('Livestock')
             .where('farm_id', '==', farmId)
             .get();
 
